@@ -17,9 +17,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -77,9 +75,9 @@ public class ConsentRequestRepository {
     }
 
     public Mono<ListResult<List<ConsentRequestDetail>>> requestsForPatient(String patientId,
-																		   int limit,
+                                                                           int limit,
                                                                            int offset,
-																		   String status) {
+                                                                           String status) {
         return Mono.create(monoSink -> dbClient.preparedQuery(SELECT_CONSENT_DETAILS_FOR_PATIENT)
                 .execute(Tuple.of(patientId, limit, offset, status, GRANTED.toString()),
                         handler -> {
@@ -143,7 +141,7 @@ public class ConsentRequestRepository {
                 .builder()
                 .requestId(result.getString("request_id"))
                 .status(getConsentStatus(result.getString("status")))
-                .createdAt(convertToDate(result.getLocalDateTime("date_created")))
+                .createdAt(result.getLocalDateTime("date_created"))
                 .hip(details.getHip())
                 .hiu(details.getHiu())
                 .hiTypes(details.getHiTypes())
@@ -152,7 +150,7 @@ public class ConsentRequestRepository {
                 .purpose(details.getPurpose())
                 .requester(details.getRequester())
                 .consentNotificationUrl(details.getConsentNotificationUrl())
-                .lastUpdated(convertToDate(result.getLocalDateTime("date_modified")))
+                .lastUpdated(result.getLocalDateTime("date_modified"))
                 .build();
     }
 
@@ -169,13 +167,6 @@ public class ConsentRequestRepository {
 
     private ConsentStatus getConsentStatus(String status) {
         return ConsentStatus.valueOf(status);
-    }
-
-    private Date convertToDate(LocalDateTime timestamp) {
-        if (timestamp != null) {
-            return Date.from(timestamp.atZone(ZoneId.systemDefault()).toInstant());
-        }
-        return null;
     }
 
     public Flux<ConsentRequestDetail> getConsentsByStatus(ConsentStatus status) {
